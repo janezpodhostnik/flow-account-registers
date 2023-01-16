@@ -35,7 +35,7 @@ app.init = function () {
         return
     }
 
-    app.ws = new WebSocket('ws://localhost:8080/ws?address=' + app.address)
+    app.ws = new WebSocket('wss://eloquence.is/register_dump/ws?address=' + app.address)
 
     app.ws.onmessage = function (event) {
         let e = JSON.parse(event.data)
