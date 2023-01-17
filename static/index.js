@@ -29,13 +29,14 @@ app.init = function () {
     app.caret = document.querySelector('.caret')
 
     app.address = app.title.getAttribute("address")
+    app.ws_host = app.title.getAttribute("ws_host")
 
     if (!app.address) {
         app.print("An app error occurred. Address is expected to not be empty at this point.")
         return
     }
 
-    app.ws = new WebSocket('wss://eloquence.is/register_dump/ws?address=' + app.address)
+    app.ws = new WebSocket(app.ws_host + '/ws?address=' + app.address)
 
     app.ws.onmessage = function (event) {
         let e = JSON.parse(event.data)

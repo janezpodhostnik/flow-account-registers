@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/rs/zerolog"
+	"math"
 
 	"github.com/onflow/cadence"
 	"github.com/onflow/flow-go/fvm"
@@ -24,6 +25,8 @@ func NewRemoteDebugger(
 	ctx := fvm.NewContext(
 		fvm.WithLogger(logger),
 		fvm.WithChain(chain),
+		fvm.WithComputationLimit(math.MaxUint64),
+		fvm.WithMemoryLimit(math.MaxUint64),
 	)
 
 	return &RemoteDebugger{

@@ -133,6 +133,9 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		account.keys.forEach(fun( key: AccountKey): Bool{
 			return true
 		})
+        for name in account.contracts.names {
+			account.contracts.get(name: name)
+        }
 		return storage
 	  }
 	`)).WithArguments(json.MustEncode(cadence.NewAddress(address)))

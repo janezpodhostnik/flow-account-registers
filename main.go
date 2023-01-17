@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/onflow/flow-go/model/flow"
@@ -17,12 +18,27 @@ import (
 
 type TemplateData struct {
 	Address string
+	WSHost  string
 }
 
 func main() {
 	log.Logger = log.
 		Output(zerolog.ConsoleWriter{Out: os.Stderr}).
 		Level(zerolog.InfoLevel)
+
+	var wsHost string
+	flag.StringVar(
+		&wsHost,
+		"wh",
+		"wss://frd.eloquence.is",
+		"websocket host name")
+
+	flag.Parse()
+
+	log.Logger.
+		Info().
+		Str("host", wsHost).
+		Msg("websocket host name")
 
 	tmpl := template.Must(template.ParseFiles("index.html"))
 	upgrader := websocket.Upgrader{
@@ -39,6 +55,11 @@ func main() {
 
 		addressString := r.URL.Query().Get("address")
 		address := flow.HexToAddress(addressString)
+
+		log.Logger.
+			Info().
+			Str("address", address.String()).
+			Msg("requested address")
 
 		writer := &SocketWriter{conn: currentGorillaConn}
 		defer func() {
@@ -67,9 +88,14 @@ func main() {
 			log.Error().Err(err).Msg("error handling request")
 			msg := NewErrorMessage(err)
 			enc, err := json.Marshal(msg)
-			if err != nil {
+			if err == nil {
 				_, _ = writer.Write(enc)
+			} else {
+				log.Error().
+					Err(err).
+					Msg("failed to marshal error message")
 			}
+
 		}
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +109,10 @@ func main() {
 
 		address := flow.HexToAddress(p[1])
 
-		tmpl.Execute(w, TemplateData{Address: address.HexWithPrefix()})
+		tmpl.Execute(w, TemplateData{
+			Address: address.HexWithPrefix(),
+			WSHost:  wsHost,
+		})
 	})
 	fmt.Println("Server starting at :8080")
 	http.ListenAndServe(":8080", nil)
