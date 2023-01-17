@@ -78,7 +78,7 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		}
 		cache[regID] = resp.Values[0]
 
-		if flow.BytesToAddress([]byte(owner)) == address {
+		if flow.BytesToAddress([]byte(owner)) == address && len(resp.Values[0]) > 0 {
 			sumUsed += uint64(len(resp.Values[0])) + uint64(len(key)) + uint64(len(owner)) + 4
 
 			resultChan <- AccountRegisterResult{
@@ -133,6 +133,9 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		account.keys.forEach(fun( key: AccountKey): Bool{
 			return true
 		})
+        for name in account.contracts.names {
+			account.contracts.get(name: name)
+        }
 		return storage
 	  }
 	`)).WithArguments(json.MustEncode(cadence.NewAddress(address)))

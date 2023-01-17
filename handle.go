@@ -119,7 +119,7 @@ func handle(
 			if result.StorageUsed < result.ComputedStorageUsed {
 				s = fmt.Sprintf(
 					"Some bytes are extra!? Expected %d bytes, but got %d bytes of registers.\n"+
-						"Strange, better report this on the flow discord, if you are consistently getting this result for an account.",
+						"Strange, better let me know, if you are consistently getting this result for an account.",
 					result.StorageUsed,
 					result.ComputedStorageUsed)
 			} else if result.StorageUsed > result.ComputedStorageUsed {
