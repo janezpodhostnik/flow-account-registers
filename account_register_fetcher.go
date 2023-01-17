@@ -133,9 +133,7 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		account.keys.forEach(fun( key: AccountKey): Bool{
 			return true
 		})
-        for name in account.contracts.names {
-			account.contracts.get(name: name)
-        }
+
 		return storage
 	  }
 	`)).WithArguments(json.MustEncode(cadence.NewAddress(address)))
@@ -153,6 +151,35 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		}
 		return
 	}
+	tx := flow.NewTransactionBody().
+		SetScript(
+			[]byte(`
+				transaction {
+					prepare(account: AuthAccount) {
+						let contracts = account.contracts.names
+						for name in contracts {
+							account.contracts.get(name: name)
+							account.contracts.remove(name: name)
+						}
+					}
+				}
+			`)).
+		AddAuthorizer(address)
+
+	scriptError, processError = scriptExecutor.RunTransaction(fvm.Transaction(tx, 0))
+	if scriptError != nil {
+		resultChan <- ErrorResult{
+			Error: fmt.Errorf("could not run fake tx, script error: %w", scriptError),
+		}
+		return
+	}
+	if processError != nil {
+		resultChan <- ErrorResult{
+			Error: fmt.Errorf("could not run fake tx, script process error: %w", processError),
+		}
+		return
+	}
+
 	resultChan <- StorageUsedResult{
 		StorageUsed:         value.(cadence.UInt64).ToGoValue().(uint64),
 		ComputedStorageUsed: sumUsed,
