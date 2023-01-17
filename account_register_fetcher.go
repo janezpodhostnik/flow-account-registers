@@ -78,7 +78,7 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		}
 		cache[regID] = resp.Values[0]
 
-		if flow.BytesToAddress([]byte(owner)) == address {
+		if flow.BytesToAddress([]byte(owner)) == address && len(resp.Values[0]) > 0 {
 			sumUsed += uint64(len(resp.Values[0])) + uint64(len(key)) + uint64(len(owner)) + 4
 
 			resultChan <- AccountRegisterResult{
