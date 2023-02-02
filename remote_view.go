@@ -74,11 +74,11 @@ func (v *RemoteView) Get(owner, key string) (flow.RegisterValue, error) {
 }
 
 func (v *RemoteView) AllRegisters() []flow.RegisterID {
-	panic("Not implemented")
+	return nil
 }
 
 func (v *RemoteView) RegisterUpdates() ([]flow.RegisterID, []flow.RegisterValue) {
-	panic("Not implemented")
+	return nil, nil
 }
 
 func (v *RemoteView) Touch(owner, key string) error {

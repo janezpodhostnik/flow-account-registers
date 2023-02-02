@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/onflow/cadence v0.31.3
-	github.com/onflow/flow-archive v0.29.4
+	github.com/onflow/flow-archive v0.29.6
 	github.com/onflow/flow-go v0.29.5
 	github.com/rs/zerolog v1.28.0
 	google.golang.org/grpc v1.47.0
