@@ -70,7 +70,7 @@ func main() {
 		}()
 
 		err = func(w io.Writer, address flow.Address) error {
-			client, err := getClient("dps-001.mainnet20.nodes.onflow.org:9000", log.Logger)
+			client, err := getClient("archive.mainnet.nodes.onflow.org:9000", log.Logger)
 			if err != nil {
 				return err
 			}

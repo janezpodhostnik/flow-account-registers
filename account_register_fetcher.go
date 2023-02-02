@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog"
 
@@ -101,7 +102,17 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 	)
 
 	script := fvm.Script([]byte(`
-	pub fun main(address: Address): UInt64 {
+	pub struct AccountInfo {
+		pub(set) var storageUsed: UInt64
+		pub(set) var contracts: [String]
+	
+		init() {
+			self.storageUsed = 0
+			self.contracts = []
+		}
+	}
+
+	pub fun main(address: Address): AccountInfo {
 		let account = getAuthAccount(address)
         let storage = account.storageUsed
 		let paths: {StoragePath:Bool} = {}
@@ -134,7 +145,11 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 			return true
 		})
 
-		return storage
+		let info = AccountInfo()
+		info.storageUsed = storage
+		info.contracts = account.contracts.names
+
+		return info
 	  }
 	`)).WithArguments(json.MustEncode(cadence.NewAddress(address)))
 
@@ -151,9 +166,22 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		}
 		return
 	}
-	tx := flow.NewTransactionBody().
-		SetScript(
-			[]byte(`
+	storageUsed := value.(cadence.Struct).Fields[0].(cadence.UInt64).ToGoValue().(uint64)
+	contracts := make(map[string]struct{})
+	for _, contract := range value.(cadence.Struct).Fields[1].(cadence.Array).Values {
+		contracts[contract.(cadence.String).ToGoValue().(string)] = struct{}{}
+	}
+
+	sb := strings.Builder{}
+	for contract := range contracts {
+		sb.WriteString("import ")
+		sb.WriteString(contract)
+		sb.WriteString(" from ")
+		sb.WriteString(address.HexWithPrefix())
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString(`
 				transaction {
 					prepare(account: AuthAccount) {
 						let contracts = account.contracts.names
@@ -163,7 +191,10 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 						}
 					}
 				}
-			`)).
+			`)
+
+	tx := flow.NewTransactionBody().
+		SetScript([]byte(sb.String())).
 		AddAuthorizer(address)
 
 	scriptError, processError = scriptExecutor.RunTransaction(fvm.Transaction(tx, 0))
@@ -181,7 +212,7 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 	}
 
 	resultChan <- StorageUsedResult{
-		StorageUsed:         value.(cadence.UInt64).ToGoValue().(uint64),
+		StorageUsed:         storageUsed,
 		ComputedStorageUsed: sumUsed,
 	}
 }
