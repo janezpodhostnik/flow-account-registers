@@ -123,7 +123,8 @@ func (r *AccountRegisterFetcher) fetch(ctx context.Context, address flow.Address
 		paths.forEachKey(fun (key: StoragePath): Bool {
 			let value = paths[key]??false
 			if value {
-				destroy account.load<@AnyResource>(from: key)
+				let res <- account.load<@AnyResource>(from: key)
+				account.save(<-res, to: key)
 			} else {
 				account.copy<AnyStruct>(from: key)
 			}
