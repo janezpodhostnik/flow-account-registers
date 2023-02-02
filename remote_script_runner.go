@@ -27,6 +27,7 @@ func NewRemoteDebugger(
 		fvm.WithChain(chain),
 		fvm.WithComputationLimit(math.MaxUint64),
 		fvm.WithMemoryLimit(math.MaxUint64),
+		fvm.WithMaxStateInteractionSize(math.MaxUint64),
 		fvm.WithContractRemovalRestricted(false),
 		fvm.WithAuthorizationChecksEnabled(false),
 		fvm.WithSequenceNumberCheckAndIncrementEnabled(false),
